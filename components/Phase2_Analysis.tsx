@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useRef } from 'react';
 import { useSpeechRecognition } from '../hooks/useSpeechRecognition';
 import { MicrophoneIcon } from './icons/MicrophoneIcon';
@@ -9,40 +8,36 @@ interface Phase2Props {
 }
 
 const Phase2Analysis: React.FC<Phase2Props> = ({ questions, onSubmit }) => {
-    const [answers, setAnswers] = useState<string[]>(Array(questions.length).fill(''));
+    const [submittedAnswers, setSubmittedAnswers] = useState<string[]>([]);
+    const [currentAnswer, setCurrentAnswer] = useState('');
     const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
     const { isListening, transcript, startListening, stopListening, hasRecognitionSupport } = useSpeechRecognition();
     const chatEndRef = useRef<HTMLDivElement>(null);
     const [isThinking, setIsThinking] = useState(true);
 
     useEffect(() => {
-        // Simulating the agent "thinking" before presenting questions
         const timer = setTimeout(() => setIsThinking(false), 1500);
         return () => clearTimeout(timer);
     }, []);
 
     useEffect(() => {
         if (!isListening && transcript) {
-            handleAnswerChange(transcript);
+            setCurrentAnswer(transcript);
         }
-        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [transcript, isListening]);
     
     useEffect(() => {
         chatEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-    }, [currentQuestionIndex, isThinking]);
-
-    const handleAnswerChange = (value: string) => {
-        const newAnswers = [...answers];
-        newAnswers[currentQuestionIndex] = value;
-        setAnswers(newAnswers);
-    };
+    }, [currentQuestionIndex, submittedAnswers, isThinking]);
 
     const handleNextQuestion = () => {
+        const newSubmittedAnswers = [...submittedAnswers, currentAnswer];
         if (currentQuestionIndex < questions.length - 1) {
+            setSubmittedAnswers(newSubmittedAnswers);
+            setCurrentAnswer('');
             setCurrentQuestionIndex(prev => prev + 1);
         } else {
-            onSubmit(answers);
+            onSubmit(newSubmittedAnswers);
         }
     };
     
@@ -50,7 +45,7 @@ const Phase2Analysis: React.FC<Phase2Props> = ({ questions, onSubmit }) => {
         if (isListening) {
             stopListening();
         } else {
-            handleAnswerChange(''); // Clear previous text before starting
+            setCurrentAnswer('');
             startListening();
         }
     };
@@ -74,26 +69,29 @@ const Phase2Analysis: React.FC<Phase2Props> = ({ questions, onSubmit }) => {
             <p className="text-gray-600 dark:text-gray-300 mb-6">The AI agent has a few questions to create the best plan.</p>
             
             <div className="flex-grow overflow-y-auto space-y-4 pr-2">
-                {questions.slice(0, currentQuestionIndex + 1).map((q, index) => (
-                    <div key={index}>
+                {submittedAnswers.map((answer, index) => (
+                     <div key={index}>
                         <div className="p-4 bg-indigo-100 dark:bg-indigo-900/50 rounded-lg rounded-bl-none">
-                            <p className="text-indigo-800 dark:text-indigo-200">{q}</p>
+                            <p className="text-indigo-800 dark:text-indigo-200">{questions[index]}</p>
                         </div>
-                        {answers[index] && index <= currentQuestionIndex && (
-                            <div className="mt-2 p-4 bg-gray-100 dark:bg-gray-700 rounded-lg rounded-br-none ml-auto max-w-xl">
-                                <p className="text-gray-800 dark:text-gray-200">{answers[index]}</p>
-                            </div>
-                        )}
+                        <div className="mt-2 p-4 bg-gray-100 dark:bg-gray-700 rounded-lg rounded-br-none ml-auto max-w-xl">
+                            <p className="text-gray-800 dark:text-gray-200">{answer}</p>
+                        </div>
                     </div>
                 ))}
+                {currentQuestionIndex < questions.length && (
+                    <div className="p-4 bg-indigo-100 dark:bg-indigo-900/50 rounded-lg rounded-bl-none">
+                        <p className="text-indigo-800 dark:text-indigo-200">{questions[currentQuestionIndex]}</p>
+                    </div>
+                )}
                  <div ref={chatEndRef} />
             </div>
 
             <div className="mt-6 pt-4 border-t dark:border-gray-700">
                 <div className="relative">
                     <textarea
-                        value={answers[currentQuestionIndex]}
-                        onChange={(e) => handleAnswerChange(e.target.value)}
+                        value={currentAnswer}
+                        onChange={(e) => setCurrentAnswer(e.target.value)}
                         placeholder="Type your answer here..."
                         rows={3}
                         className="w-full p-3 pr-24 border rounded-md bg-gray-50 dark:bg-gray-800 dark:border-gray-600 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"

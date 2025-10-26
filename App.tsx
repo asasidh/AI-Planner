@@ -1,4 +1,3 @@
-
 import React, { useState, useCallback } from 'react';
 import { AppPhase, ChallengeCardData, AgendaItem, InitialContext, FullContext, Prompts } from './types';
 import { analyzeContext, deepResearch, generateNewCards } from './services/geminiService';
@@ -98,6 +97,7 @@ const App: React.FC = () => {
                     agenda={agenda} 
                     initialCards={challengeCards}
                     onGenerateNewCards={handleGenerateNewCards}
+                    customerName={fullContext?.customerName || 'Valued Customer'}
                     />;
             default:
                 return <Phase1InfoGathering onSubmit={handleInfoSubmit} />;
