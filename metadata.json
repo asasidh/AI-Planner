@@ -1,0 +1,7 @@
+{
+  "name": "AI Day Planner Pro",
+  "description": "An intelligent application to plan and organize AI Day workshops. It uses AI agents to gather context, perform deep research, generate agendas, create challenge cards, and export a final plan.",
+  "requestFramePermissions": [
+    "microphone"
+  ]
+}
